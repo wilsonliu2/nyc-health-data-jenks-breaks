@@ -1,3 +1,4 @@
+//-------------------------------------------------------------------- JENKS NATURAL BREAKS ALGORITHM ---------------------------------------------------------
 // # [Jenks natural breaks optimization](http://en.wikipedia.org/wiki/Jenks_natural_breaks_optimization)
 //
 // Implementations: [1](http://danieljlewis.org/files/2010/06/Jenks.pdf) (python),
@@ -149,84 +150,8 @@ function jenks(data, n_classes) {
   return breaks(data, lower_class_limits, n_classes);
 }
 
-//-------------------------------------------------------------------- DATAS ---------------------------------------------------------
-
-/*
-Arabic
-Chinese
-French
-German
-Korean
-Other
-Other_Asia
-Other_Indo
-Russian
-Spanish
-Tagalog
-Vietnamese
-Total_pop
-Lack of health insurance crude prevalence (%)
-Binge drinking crude prevalence (%)
-Current smoking crude prevalence (%)
-Physical inactivity crude prevalence (%)
-Sleep <7 hours crude prevalence (%)
-Current asthma crude prevalence (%)
-High blood pressure crude prevalence (%)
-Cancer (except skin) crude prevalence (%)
-Cholesterol screening crude prevalence (%)
-Chronic kidney disease crude prevalence (%)
-Arthritis crude prevalence (%)
-Coronary heart disease crude prevalence (%)
-Diabetes crude prevalence (%)
-Obesity crude prevalence (%)
-Stroke crude prevalence (%)
-Current asthma crude prevalence (%)
-High blood pressure crude prevalence (%)
-Cancer (except skin) crude prevalence (%)
-Cholesterol screening crude prevalence (%)
-Chronic kidney disease crude prevalence (%)
-Arthritis crude prevalence (%)
-Coronary heart disease crude prevalence (%)
-Diabetes crude prevalence (%)
-Obesity crude prevalence (%)
-Stroke crude prevalence (%)
-Annual checkup crude prevalence (%)
-Dental visit crude prevalence (%)
-Cholesterol screening crude prevalence (%)
-Mammography use crude prevalence (%)
-Cervical cancer screening crude prevalence (%)
-Colorectal cancer screening crude prevalence (%)
-Depression crude prevalence (%)
-Frequent mental health distress crude prevalence (%)
-Frequent physical health distress crude prevalence (%)
-Fair or poor health crude prevalence (%)
-Any disability crude prevalence (%)
-Any disability crude prevalence (%)
-Hearing disability crude prevalence (%)
-Vision disability crude prevalence (%)
-Cognitive disability crude prevalence (%)
-Mobility disability crude prevalence (%)
-Self-care disability crude prevalence (%)
-Independent living disability crude prevalence (%)
-*/
-
+//-------------------------------------------------------------------- CONSTANTS ---------------------------------------------------------
 const BREAKS_AMOUNT = 6;
-
-const languageData = {
-  Arabic: [],
-  Chinese: [],
-  French: [],
-  German: [],
-  Korean: [],
-  Other: [],
-  Other_Asia: [],
-  Other_Indo: [],
-  Russian: [],
-  Spanish: [],
-  Tagalog: [],
-  Vietnamese: [],
-  Total_pop: [],
-};
 
 const healthMetrics = [
   "Lack of health insurance crude prevalence (%)",
@@ -262,6 +187,119 @@ const healthMetrics = [
   "Independent living disability crude prevalence (%)",
 ];
 
+const sunsetParkCensusTracts = [
+  "36047000200",
+  "36047001801",
+  "36047001802",
+  "36047001803",
+  "36047001804",
+  "36047002000",
+  "36047002200",
+  "36047007200",
+  "36047007400",
+  "36047007600",
+  "36047007800",
+  "36047008000",
+  "36047008200",
+  "36047008400",
+  "36047010100",
+  "36047014300",
+  "36047014500",
+  "36047014700",
+  "36047008600",
+  "36047008800",
+  "36047009001",
+  "36047009201",
+  "36047009401",
+  "36047009600",
+  "36047009800",
+  "36047010000",
+  "36047010200",
+  "36047010401",
+  "36047010601",
+  "36047010801",
+  "36047011800",
+  "36047012200",
+  "36047009002",
+  "36047009202",
+  "36047009402",
+  "36047010402",
+  "36047010602",
+  "36047010802",
+  "36047011000",
+  "36047011200",
+  "36047011400",
+  "36047011600",
+];
+const sunsetParkCensusTractsSet = new Set(sunsetParkCensusTracts);
+
+const languageBreaks = {};
+const healthData = {};
+const healthBreaks = {};
+
+const boroughs = ["Brooklyn", "Manhattan", "Queens", "Staten Island", "Bronx"];
+
+const boroughLanguageData = {
+  Brooklyn: {},
+  Manhattan: {},
+  Queens: {},
+  "Staten Island": {},
+  Bronx: {},
+};
+
+const boroughHealthData = {
+  Brooklyn: {},
+  Manhattan: {},
+  Queens: {},
+  "Staten Island": {},
+  Bronx: {},
+};
+
+const boroughLanguageBreaks = {
+  Brooklyn: {},
+  Manhattan: {},
+  Queens: {},
+  "Staten Island": {},
+  Bronx: {},
+};
+
+const boroughHealthBreaks = {
+  Brooklyn: {},
+  Manhattan: {},
+  Queens: {},
+  "Staten Island": {},
+  Bronx: {},
+};
+
+const languageData = {
+  Arabic: [],
+  Chinese: [],
+  French: [],
+  German: [],
+  Korean: [],
+  Other: [],
+  Other_Asia: [],
+  Other_Indo: [],
+  Russian: [],
+  Spanish: [],
+  Tagalog: [],
+  Vietnamese: [],
+  Total_pop: [],
+};
+
+const sunsetParkLanguageData = languageData;
+const sunsetParkHealthData = {};
+const sunsetParkLanguageBreaks = {};
+const sunsetParkHealthBreaks = {};
+
+boroughs.forEach((borough) => {
+  boroughLanguageData[borough] = languageData;
+  healthMetrics.forEach((metric) => {
+    boroughHealthData[borough][metric] = [];
+    sunsetParkHealthData[metric] = [];
+  });
+});
+
 //---------------------------------------------------- Language and Demographics -----------------------------------------
 
 languageGeoJsonData.features.forEach((feature) => {
@@ -271,25 +309,42 @@ languageGeoJsonData.features.forEach((feature) => {
     var value = parseFloat(properties[language]);
     if (!isNaN(value)) {
       languageData[language].push(value);
+
+      boroughs.forEach((borough) => {
+        if (properties.boroname.trim() === borough) {
+          boroughLanguageData[borough][language].push(value);
+        }
+      });
+
+      if (sunsetParkCensusTractsSet.has(String(properties.Tract))) {
+        sunsetParkLanguageData[language].push(value);
+      }
     }
   });
 });
-
-// All language and demographics data
-// console.log(languageData);
-
-var languageBreaks = {};
 
 Object.keys(languageData).forEach((language) => {
   languageBreaks[language] = jenks(languageData[language], BREAKS_AMOUNT);
 });
 
-// Display language breaks
-// console.log(languageBreaks);
+boroughs.forEach((borough) => {
+  Object.keys(boroughLanguageData[borough]).forEach((language) => {
+    boroughLanguageBreaks[borough][language] = jenks(
+      boroughLanguageData[borough][language],
+      BREAKS_AMOUNT
+    );
+  });
+});
+
+Object.keys(sunsetParkLanguageData).forEach((language) => {
+  sunsetParkLanguageBreaks[language] = jenks(
+    sunsetParkLanguageData[language],
+    BREAKS_AMOUNT
+  );
+});
 
 //---------------------------------------------------- Health -----------------------------------------
 
-var healthData = {};
 healthMetrics.forEach((metric) => (healthData[metric] = []));
 
 healthDataGeojson.features.forEach((feature) => {
@@ -299,26 +354,100 @@ healthDataGeojson.features.forEach((feature) => {
     var value = parseFloat(properties[metric]);
     if (!isNaN(value)) {
       healthData[metric].push(value);
+
+      boroughs.forEach((borough) => {
+        let countyNameMap = {
+          Brooklyn: "Kings",
+          Manhattan: "New York",
+          Queens: "Queens",
+          "Staten Island": "Richmond",
+          Bronx: "Bronx",
+        };
+
+        if (properties["County name"] === countyNameMap[borough]) {
+          boroughHealthData[borough][metric].push(value);
+        }
+      });
+
+      if (sunsetParkCensusTractsSet.has(properties["Census tract FIPS"])) {
+        sunsetParkHealthData[metric].push(value);
+      }
     }
   });
 });
 
-// All health data
-// console.log(healthData);
-
-var healthBreaks = {};
-
-// Calculate Jenks breaks for each health metric
 Object.keys(healthData).forEach((metric) => {
   healthBreaks[metric] = jenks(healthData[metric], BREAKS_AMOUNT);
 });
 
-// Display health breaks
-// console.log(healthBreaks);
+boroughs.forEach((borough) => {
+  Object.keys(boroughHealthData[borough]).forEach((metric) => {
+    boroughHealthBreaks[borough][metric] = jenks(
+      boroughHealthData[borough][metric],
+      BREAKS_AMOUNT
+    );
+  });
+});
+
+Object.keys(sunsetParkHealthData).forEach((metric) => {
+  sunsetParkHealthBreaks[metric] = jenks(
+    sunsetParkHealthData[metric],
+    BREAKS_AMOUNT
+  );
+});
 
 //---------------------------------------------------- Display -----------------------------------------
 var languageBreaksDiv = document.getElementById("language-breaks");
 var healthBreaksDiv = document.getElementById("health-breaks");
+var brooklynLanguageBreaksDiv = document.getElementById(
+  "brooklyn-language-breaks"
+);
+var brooklynHealthBreaksDiv = document.getElementById("brooklyn-health-breaks");
+var manhattanLanguageBreaksDiv = document.getElementById(
+  "manhattan-language-breaks"
+);
+var manhattanHealthBreaksDiv = document.getElementById(
+  "manhattan-health-breaks"
+);
+var queensLanguageBreaksDiv = document.getElementById("queens-language-breaks");
+var queensHealthBreaksDiv = document.getElementById("queens-health-breaks");
+var statenLanguageBreaksDiv = document.getElementById("staten-language-breaks");
+var statenHealthBreaksDiv = document.getElementById("staten-health-breaks");
+var bronxLanguageBreaksDiv = document.getElementById("bronx-language-breaks");
+var bronxHealthBreaksDiv = document.getElementById("bronx-health-breaks");
+var sunsetParkLanguageBreaksDiv = document.getElementById(
+  "sunset-park-language-breaks"
+);
+var sunsetParkHealthBreaksDiv = document.getElementById(
+  "sunset-park-health-breaks"
+);
+
+const boroughDivs = {
+  Brooklyn: {
+    language: brooklynLanguageBreaksDiv,
+    health: brooklynHealthBreaksDiv,
+  },
+  Manhattan: {
+    language: manhattanLanguageBreaksDiv,
+    health: manhattanHealthBreaksDiv,
+  },
+  Queens: {
+    language: queensLanguageBreaksDiv,
+    health: queensHealthBreaksDiv,
+  },
+  "Staten Island": {
+    language: statenLanguageBreaksDiv,
+    health: statenHealthBreaksDiv,
+  },
+  Bronx: {
+    language: bronxLanguageBreaksDiv,
+    health: bronxHealthBreaksDiv,
+  },
+  "Sunset Park": {
+    language: sunsetParkLanguageBreaksDiv,
+    health: sunsetParkHealthBreaksDiv,
+  },
+};
 
 Object.keys(languageBreaks).forEach((language) => {
   var h3 = document.createElement("h3");
@@ -330,6 +459,30 @@ Object.keys(languageBreaks).forEach((language) => {
   languageBreaksDiv.appendChild(p);
 });
 
+boroughs.forEach((borough) => {
+  Object.keys(boroughLanguageBreaks[borough]).forEach((language) => {
+    var div = boroughDivs[borough].language;
+    var h3 = document.createElement("h3");
+    h3.textContent = language;
+    div.appendChild(h3);
+
+    var p = document.createElement("p");
+    p.textContent = boroughLanguageBreaks[borough][language].join(", ");
+    div.appendChild(p);
+  });
+
+  Object.keys(boroughHealthBreaks[borough]).forEach((metric) => {
+    var div = boroughDivs[borough].health;
+    var h3 = document.createElement("h3");
+    h3.textContent = metric;
+    div.appendChild(h3);
+
+    var p = document.createElement("p");
+    p.textContent = boroughHealthBreaks[borough][metric].join(", ");
+    div.appendChild(p);
+  });
+});
+
 Object.keys(healthBreaks).forEach((metric) => {
   var h3 = document.createElement("h3");
   h3.textContent = metric;
@@ -338,4 +491,24 @@ Object.keys(healthBreaks).forEach((metric) => {
   var p = document.createElement("p");
   p.textContent = healthBreaks[metric].join(", ");
   healthBreaksDiv.appendChild(p);
+});
+
+Object.keys(sunsetParkLanguageBreaks).forEach((language) => {
+  var h3 = document.createElement("h3");
+  h3.textContent = language;
+  sunsetParkLanguageBreaksDiv.appendChild(h3);
+
+  var p = document.createElement("p");
+  p.textContent = sunsetParkLanguageBreaks[language].join(", ");
+  sunsetParkLanguageBreaksDiv.appendChild(p);
+});
+
+Object.keys(sunsetParkHealthBreaks).forEach((metric) => {
+  var h3 = document.createElement("h3");
+  h3.textContent = metric;
+  sunsetParkHealthBreaksDiv.appendChild(h3);
+
+  var p = document.createElement("p");
+  p.textContent = sunsetParkHealthBreaks[metric].join(", ");
+  sunsetParkHealthBreaksDiv.appendChild(p);
 });
