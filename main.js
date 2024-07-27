@@ -185,6 +185,7 @@ const healthMetrics = [
   "Mobility disability crude prevalence (%)",
   "Self-care disability crude prevalence (%)",
   "Independent living disability crude prevalence (%)",
+  "High cholesterol crude prevalence (%)",
 ];
 
 const sunsetParkCensusTracts = [
