@@ -287,13 +287,13 @@ const languageData = {
   Total_pop: [],
 };
 
-const sunsetParkLanguageData = languageData;
+const sunsetParkLanguageData = JSON.parse(JSON.stringify(languageData));
 const sunsetParkHealthData = {};
 const sunsetParkLanguageBreaks = {};
 const sunsetParkHealthBreaks = {};
 
 boroughs.forEach((borough) => {
-  boroughLanguageData[borough] = languageData;
+  boroughLanguageData[borough] = JSON.parse(JSON.stringify(languageData));
   healthMetrics.forEach((metric) => {
     boroughHealthData[borough][metric] = [];
     sunsetParkHealthData[metric] = [];
